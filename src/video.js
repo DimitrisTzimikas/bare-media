@@ -66,6 +66,9 @@ async function extractFrames(fd, opts = {}) {
   }
 
   if (!result) {
+    if (currentFrame > 0 && frameIndex >= currentFrame) {
+      return extractFrames(fd, { ...opts, frameIndex: currentFrame - 1 })
+    }
     throw new Error(`Frame ${frameIndex} not found (video only has ${currentFrame} frames)`)
   }
 

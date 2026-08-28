@@ -32,6 +32,17 @@ test('video extractFrames() in pipeline', async (t) => {
   t.is(rgba.height, 240)
 })
 
+test('video extractFrames() falls back to the last frame when frameIndex is beyond the end', async (t) => {
+  const path = './test/fixtures/sample.mp4'
+
+  const lastFrame = await video(path).extractFrames({ frameIndex: 97 })
+  const rgba = await video(path).extractFrames({ frameIndex: 999999 })
+
+  t.is(rgba.width, 320)
+  t.is(rgba.height, 240)
+  t.ok(b4a.equals(rgba.data, lastFrame.data))
+})
+
 test('video metadata()', async (t) => {
   const path = './test/fixtures/orientation.mov'
 
