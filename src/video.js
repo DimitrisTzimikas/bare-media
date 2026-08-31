@@ -4,9 +4,22 @@ import { createIOContext } from './video/io'
 import { metadata } from './video/metadata'
 
 async function extractFrames(fd, opts = {}) {
-  const { frameIndex } = opts
+  const { frameIndex, outOfRangeLast = false } = opts
 
   const ffmpeg = await importFFmpeg()
+
+  const first = decodeFrameAt(fd, ffmpeg, frameIndex)
+  if (first.result) return first.result
+
+  if (outOfRangeLast && first.currentFrame > 0 && frameIndex >= first.currentFrame) {
+    const second = decodeFrameAt(fd, ffmpeg, first.currentFrame - 1)
+    if (second.result) return second.result
+  }
+
+  throw new Error(`Frame ${frameIndex} not found (video only has ${first.currentFrame} frames)`)
+}
+
+function decodeFrameAt(fd, ffmpeg, frameIndex) {
   const io = createIOContext(fd, ffmpeg)
 
   using inputFormat = new ffmpeg.InputFormatContext(io)
@@ -65,14 +78,7 @@ async function extractFrames(fd, opts = {}) {
     if (result) break
   }
 
-  if (!result) {
-    if (currentFrame > 0 && frameIndex >= currentFrame) {
-      return extractFrames(fd, { ...opts, frameIndex: currentFrame - 1 })
-    }
-    throw new Error(`Frame ${frameIndex} not found (video only has ${currentFrame} frames)`)
-  }
-
-  return result
+  return { result, currentFrame }
 }
 
 async function* transcode(fd, opts = {}) {
