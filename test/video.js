@@ -43,7 +43,7 @@ test('video extractFrames() throws when frameIndex is beyond the end', async (t)
 test('video extractFrames() with outOfRangeLast falls back to the last frame', async (t) => {
   const path = './test/fixtures/sample.mp4'
 
-  const lastFrame = await video(path).extractFrames({ frameIndex: 97 })
+  const lastFrame = await video(path).extractFrames({ frameIndex: 99 })
   const rgba = await video(path).extractFrames({
     frameIndex: 999999,
     outOfRangeLast: true

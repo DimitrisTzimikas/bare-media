@@ -45,6 +45,20 @@ async function extractFrames(fd, opts = {}) {
     if (result) break
   }
 
+  if (!result) {
+    using flushPacket = new ffmpeg.Packet()
+    decoder.sendPacket(flushPacket)
+    while (decoder.receiveFrame(frame)) {
+      if (currentFrame === frameIndex) {
+        result = convertToRGBA(ffmpeg, frame)
+        break
+      }
+      lastFrame = frame
+      frame = frame === frameA ? frameB : frameA
+      currentFrame++
+    }
+  }
+
   if (!result && outOfRangeLast && lastFrame && frameIndex >= currentFrame) {
     result = convertToRGBA(ffmpeg, lastFrame)
   }
