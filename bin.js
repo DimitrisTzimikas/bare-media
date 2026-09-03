@@ -11,6 +11,7 @@ import {
 } from 'bare-media/types'
 import getMimeType from 'get-mime-type'
 
+import { cleanMetadata } from './lib/bin'
 import { detectMimeType } from './src/codecs'
 import pkg from './package'
 
@@ -30,6 +31,7 @@ const cli = command(
     arg('[output]', 'Output media file'),
     flag('--strip', 'Strip image metadata'),
     flag('--json|-j', 'Print JSON'),
+    flag('--raw|-r', 'Show binary metadata values'),
     metadata
   ),
   command(
@@ -82,15 +84,16 @@ async function metadata(parsed) {
       return
     }
 
-    const data = await image(input).metadata()
-    const out = data || { mimetype }
-    print(out, { json: parsed.flags.json })
+    const data = (await image(input).metadata()) || { mimetype }
+    const output = parsed.flags.raw ? data : cleanMetadata(data)
+    print(output, { json: parsed.flags.json })
     return
   }
 
   if (mimetype.startsWith('video/')) {
     const data = await video(input).metadata()
-    print(data, { json: parsed.flags.json })
+    const output = parsed.flags.raw ? data : cleanMetadata(data)
+    print(output, { json: parsed.flags.json })
     return
   }
 
